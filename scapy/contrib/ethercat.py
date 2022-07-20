@@ -314,6 +314,8 @@ class EtherCatType12DLPDU(Packet):
         return pkt[:7] + next_flag + pkt[8:] + pay
 
     def guess_payload_class(self, payload):
+        if self.next == 0:
+            return Packet.guess_payload_class(self, payload)
 
         try:
             dlpdu_type = payload[0]
@@ -509,6 +511,16 @@ class EtherCatFRMW(EtherCatType12DLPDU):
         EtherCatType12DLPDU.PHYSICAL_ADDRESSING_DESC
 
 
+######################
+# other commands
+######################
+
+class EtherCatNOP(EtherCatType12DLPDU):
+    fields_desc = [ByteField('_cmd', 0x00)] + \
+        EtherCatType12DLPDU.PHYSICAL_ADDRESSING_DESC
+
+
+
 class EtherCat(Packet):
     """
     Common EtherCat header layer
@@ -531,6 +543,7 @@ class EtherCat(Packet):
     ]
 
     ETHERCAT_TYPE12_DLPDU_TYPES = {
+        0x00: EtherCatNOP,
         0x01: EtherCatAPRD,
         0x04: EtherCatFPRD,
         0x07: EtherCatBRD,
@@ -637,3 +650,4 @@ bind_layers(EtherCat, EtherCatBRW, type=0x01)
 bind_layers(EtherCat, EtherCatLRW, type=0x01)
 bind_layers(EtherCat, EtherCatARMW, type=0x01)
 bind_layers(EtherCat, EtherCatFRMW, type=0x01)
+bind_layers(EtherCat, EtherCatNOP, type=0x01)
